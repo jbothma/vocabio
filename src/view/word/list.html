@@ -1,0 +1,25 @@
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+  </head>
+  <body>
+{% if user %}<a href="/user/signout">Sign out</a>{% endif %}
+    <h2>Hello{% if user %}, {{ user.display_name }}{% endif %}!</h2>
+{% if user %}
+    <form method="post">
+      New word:
+      <input type="text" name="new_word" autofocus="autofocus"/>
+      <input type="submit" />
+    </form>
+    <table>
+      <tr><td>Word</td></tr>
+  {% for word in words %}
+      <tr><td>{{ word.word }}</td></tr>
+  {% endfor %}
+    </table>
+{% else %}
+    <p><a href="/user/signin">Sign in</a> with your Google account.</p>
+    <p>Not registered yet? <a href="/user/signup">Sign up</a> with your Google account.</p>
+{% endif %}
+  </body>
+</html>
