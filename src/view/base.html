@@ -4,7 +4,13 @@
     <title>{% block title %}{% endblock %}</title>
   </head>
   <body>
-    {% if user %}<a href="/user/signout">Sign out</a>{% endif %}
+    {% if user %}
+      <a href="/user/signout">Sign out</a>
+    {% else %}
+      <a href="/user/signin">Sign in</a> with your Google account.
+      Not registered yet?
+      <a href="/user/signup">Sign up</a> with your Google account.
+    {% endif %}
     <h2>Hello{% if user %}, {{ user.display_name }}{% endif %}!</h2>
     <div id="flash">
     {% if boss_flash %}
