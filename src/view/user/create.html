@@ -1,12 +1,9 @@
-<html>
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-  </head>
-  <body>
+{% extends "base.html" %}
+  {% block title %}Sign up{% endblock %}
+  {% block body %}
     <form action="create" method="post">
       <p>Display name: <input name="display_name" type="text" /></p>
       <p>Email address: <input name="email" type="text" /></p>
       <p><input type="submit" /></p>
     </form>
-  </body>
-</html>
+  {% endblock %}

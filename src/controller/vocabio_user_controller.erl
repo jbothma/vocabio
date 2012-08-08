@@ -73,5 +73,9 @@ openid_return() ->
             {redirect, "/user/do_signin"};
         [] when AuthState == signup ->
             ok = boss_session:set_session_data(SessionID, openid, OpenID),
-            {redirect, "/user/create"}
+            {redirect, "/user/create"};
+        [] when AuthState == signin ->
+            FlashMsg = "Your Google ID isn't known to us. Please sign up now.",
+            boss_flash:add(SessionID, notice, "Please sign up", FlashMsg),
+            {redirect, "/user/signup"}
     end.
