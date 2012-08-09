@@ -6,7 +6,6 @@ list('GET', []) ->
         undefined ->
             ok;
         User ->
-            io:format("~p~n", [User]),
             Words = boss_db:find(word, [{user_id, equals, User:id()}]),
             {ok, [{words, Words},
                   {user, User}]}
@@ -14,7 +13,8 @@ list('GET', []) ->
 
 list('POST', []) ->
     User = boss_session:get_session_data(SessionID, user),
-    Word = Req:post_param("new_word"),
+    %% looks like post_param/2 gives a list utf-8 bytes as integers.
+    Word = list_to_binary(Req:post_param("new_word")),
     WordRec = word:new(id, User:id(), Word),
     {ok, SavedWord} = WordRec:save(),
     {redirect, "/word/list"}.

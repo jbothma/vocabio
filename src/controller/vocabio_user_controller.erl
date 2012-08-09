@@ -22,7 +22,7 @@ create('GET', []) ->
     ok;
 
 create('POST', []) ->
-    DisplayName = Req:post_param("display_name"),
+    DisplayName = list_to_binary(Req:post_param("display_name")),
     Email = Req:post_param("email"),
     OpenID = boss_session:get_session_data(SessionID, openid),
     User = juser:new(id, DisplayName, Email),

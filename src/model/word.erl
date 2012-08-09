@@ -1,2 +1,2 @@
--module(word, [Id, UserId, Word]).
+-module(word, [Id, UserId, Word::binary()]).
 -compile(export_all).

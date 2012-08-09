@@ -1,3 +1,3 @@
--module(juser, [Id, DisplayName, Email]).
+-module(juser, [Id, DisplayName::binary(), Email::string()]).
 
 -compile(export_all).
