@@ -1,2 +1,3 @@
--module(word, [Id, UserId, Word::binary()]).
--compile(export_all).
+-module(word, [Id, JuserId, Word::binary()]).
+-belongs_to(juser).
+-has({word_instances, many}).

@@ -11,7 +11,14 @@
       <table>
         <tr><td>Word</td></tr>
       {% for word in words %}
-        <tr><td>{{ word.word }}</td></tr>
+        <tr>
+          <td>{{ word.word }}</td>
+          <td>
+            {% for instance in word.word_instances %}
+              {{ instance.datetime|date: "r" }}<br/>
+            {% endfor %}
+          </td>
+        </tr>
       {% endfor %}
       </table>
     {% else %}
