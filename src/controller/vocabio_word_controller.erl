@@ -25,7 +25,7 @@ list('POST', []) ->
                   [Existing] -> Existing
               end,
     %% Store POST URL without scheme for now since I'm not sure how to get it.
-    PostedTo = "//" ++ Req:header(host) ++ "/user/list",
+    PostedTo = "//" ++ Req:header(host) ++ "/word/list",
     SourceTerm = {post, PostedTo, Req:header(referer)},
     Source = term_to_binary(SourceTerm),
     {ok, SavedWord} = WordRec:save(),
