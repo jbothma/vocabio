@@ -6,9 +6,7 @@ list('GET', []) ->
         undefined ->
             ok;
         User ->
-            Words = boss_db:find(word, [{juser_id, equals, User:id()}]),
-            {ok, [{words, Words},
-                  {user, User}]}
+            {ok, [{user, User}]}
     end;
 
 list('POST', []) ->
@@ -21,8 +19,8 @@ list('POST', []) ->
     %% utf-8 does this already, but I doubt that)
     WordRec = case boss_db:find(word, [{juser_id, equals, User:id()},
                                        {word, equals, Word}]) of
-                  [] -> word:new(id, User:id(), Word);
-                  [Existing] -> Existing
+                  [] -> word:new(id, User:id(), Word, erlang:universaltime());
+                  [Existing] -> Existing:set(mod_datetime, erlang:universaltime())
               end,
     %% Store POST URL without scheme for now since I'm not sure how to get it.
     PostedTo = "//" ++ Req:header(host) ++ "/word/list",
