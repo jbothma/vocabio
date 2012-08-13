@@ -19,15 +19,18 @@ start() ->
          ,fun(Res) -> boss_assert:link_with_text("Sign in", Res) end
          ,fun(Res) -> boss_assert:link_with_text("Sign up", Res) end
         ],
-        [
-         "Follow link sign in",
+        ["Follow link sign in",
          fun(Res) ->
-             boss_web_test:follow_link("Sign in", Res,
-                 [fun boss_assert:http_ok/1 ], [])
+             boss_web_test:follow_link(
+               "Sign in", Res,
+               [
+                fun boss_assert:http_redirect/1
+               ], [])
          end,
          "Follow link sign up",
          fun(Res) ->
              boss_web_test:follow_link("Sign up", Res,
-                 [fun boss_assert:http_ok/1], [])
+                 [fun boss_assert:http_redirect/1],
+                 [])
          end
         ]).

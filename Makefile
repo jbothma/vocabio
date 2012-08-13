@@ -1,7 +1,7 @@
 ERL=erl
 REBAR=./rebar
 
-.PHONY: deps get-deps
+.PHONY: get-deps compile test
 
 all: compile
 
@@ -14,5 +14,8 @@ clean:
 get-deps:
 	@$(REBAR) get-deps
 
-test:
+test: compile boss.test.config
 	@$(REBAR) boss c=test_functional
+
+boss.test.config:
+	cp boss.config boss.test.config
