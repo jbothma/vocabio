@@ -1,2 +1,2 @@
--module(juser, [Id, DisplayName::binary(), Email::string()]).
+-module(juser, [Id, DisplayName::binary(), Email::binary()]).
 -has({words, many, [{order_by, mod_datetime}, descending]}).

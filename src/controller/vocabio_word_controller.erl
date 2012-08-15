@@ -12,14 +12,13 @@ list('GET', []) ->
 list('POST', []) ->
     User = boss_session:get_session_data(SessionID, user),
     %% looks like post_param/2 gives a list utf-8 bytes as integers.
-    Word = list_to_binary(Req:post_param("new_word")),
-    %% TODO: This searches on the utf-8 binary representation of the word
-    %% so unless the input is reduced to a canonical form, this won't match
-    %% different unicode ways of representing the same character (unless
-    %% utf-8 does this already, but I doubt that)
+    WordAsUTF8ByteList = Req:post_param("new_word"),
+    WordAsNFCUTF8Binary = vocabio_unicode:utf8bytelist_to_nfc_utf8_binary(
+                      WordAsUTF8ByteList),
     WordRec = case boss_db:find(word, [{juser_id, equals, User:id()},
-                                       {word, equals, Word}]) of
-                  [] -> word:new(id, User:id(), Word, erlang:universaltime());
+                                       {word, equals, WordAsNFCUTF8Binary}]) of
+                  [] -> word:new(id, User:id(), WordAsNFCUTF8Binary,
+                                 erlang:universaltime());
                   [Existing] -> Existing:set(mod_datetime, erlang:universaltime())
               end,
     %% Store POST URL without scheme for now since I'm not sure how to get it.

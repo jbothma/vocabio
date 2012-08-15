@@ -3,6 +3,4 @@
 %%% A user can have many identities associated with their account.
 %%% Each identity can only be used for one account.
 %%%
--module(user_openid, [Id, UserID, OpenID]).
-
--compile(export_all).
+-module(user_openid, [Id, UserID, OpenID::binary()]).

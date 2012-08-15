@@ -22,15 +22,15 @@ create('GET', []) ->
     ok;
 
 create('POST', []) ->
-    DisplayName = list_to_binary(Req:post_param("display_name")),
-    Email = Req:post_param("email"),
+    DisplayName = vocabio_unicode:utf8bytelist_to_nfc_utf8_binary(
+                    Req:post_param("display_name")),
+    Email = vocabio_unicode:utf8bytelist_to_nfc_utf8_binary(
+              Req:post_param("email")),
     OpenID = boss_session:get_session_data(SessionID, openid),
     User = juser:new(id, DisplayName, Email),
     {ok, SavedUser} = User:save(),
-    io:format("~p~n", [SavedUser]),
     UserOpenID = user_openid:new(id, SavedUser:id(), OpenID),
     {ok, SavedUserOpenID} = UserOpenID:save(),
-    io:format("~p~n", [SavedUserOpenID]),
     ok = boss_session:remove_session_data(SessionID, openid),
     ok = boss_session:set_session_data(SessionID, user_openid, SavedUserOpenID),
     {redirect, "/user/do_signin"}.
@@ -62,17 +62,16 @@ openid_return() ->
     BaseUrl =  "http://localhost:8001/",
     ReturnUrl = BaseUrl ++ "user/openid/return",
     AuthState = boss_session:get_session_data(SessionID, authstate),
-    io:format("~p~n", [AuthState]),
     Verify = {verify, SessionID, ReturnUrl, Req:query_params()},
     {ok, OpenID} = gen_server:call(openid_srv, Verify),
-    OpenIDSearch = boss_db:find(user_openid, [{open_id, equals, OpenID}]),
-    io:format("~p~n", [OpenIDSearch]),
+    OpenIDBin = vocabio_unicode:utf8bytelist_to_nfc_utf8_binary(OpenID),
+    OpenIDSearch = boss_db:find(user_openid, [{open_id, equals, OpenIDBin}]),
     case OpenIDSearch of
         [UserOpenID] when AuthState == signin ->
             ok = boss_session:set_session_data(SessionID, user_openid, UserOpenID),
             {redirect, "/user/do_signin"};
         [] when AuthState == signup ->
-            ok = boss_session:set_session_data(SessionID, openid, OpenID),
+            ok = boss_session:set_session_data(SessionID, openid, OpenIDBin),
             {redirect, "/user/create"};
         [] when AuthState == signin ->
             FlashMsg = "Your Google ID isn't known to us. Please sign up now.",
