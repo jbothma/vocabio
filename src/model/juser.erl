@@ -1,4 +1,4 @@
--module(juser, [Id, DisplayName::binary(), Email::binary()]).
+-module(juser, [Id, DisplayName, Email]).
 -has({words, many, [{order_by, mod_datetime}, descending]}).
 
 -export([validation_tests/0]).

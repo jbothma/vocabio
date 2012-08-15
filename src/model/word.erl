@@ -1,3 +1,3 @@
--module(word, [Id, JuserId, Word::binary(), ModDatetime::datetime()]).
+-module(word, [Id, JuserId, Word, ModDatetime]).
 -belongs_to(juser).
 -has({word_instances, many, [{order_by, datetime}, descending]}).

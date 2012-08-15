@@ -1,4 +1,4 @@
--module(word_instance, [Id, WordId, Datetime::datetime(), Source::binary()]).
+-module(word_instance, [Id, WordId, Datetime, Source]).
 -belongs_to(word).
 
 -export([validation_tests/0]).
