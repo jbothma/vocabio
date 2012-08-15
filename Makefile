@@ -14,8 +14,16 @@ clean:
 get-deps:
 	@$(REBAR) get-deps
 
-test: compile boss.test.config
+test: boss_test eunit ct
+
+eunit: compile
+	@$(REBAR) skip_deps=true eunit
+
+boss_test: boss.test.config
 	@$(REBAR) boss c=test_functional
+
+ct: compile
+	@$(REBAR) skip_deps=true ct
 
 boss.test.config:
 	cp boss.config boss.test.config
