@@ -1,6 +1,6 @@
 %%%-------------------------------------------------------------------
 %%% @author JD Bothma <jan.bothma@erlang-solutions.com>
-%%% @copyright (C) 2012, JD Bothma
+%%% @copyright (C) 2012, Erlang Solutions Ltd.
 %%% @doc Common Test test suite for general Vocabio functionality via HTTP
 %%%
 %%% @end
@@ -28,18 +28,30 @@ all() ->
     ].
 
 init_per_suite(Config) ->
-    RootURL = "http://localhost:8001/",
-    inets:start(),
-    %% Let httpc handle session cookies for us with the default node-wide profile
-    httpc:set_options([{cookies, enabled}]),
-    StartOut = os:cmd("../../init.sh start"),
-    ct:log(StartOut),
-    wait_until_root_up(RootURL),
-    [{root_url, RootURL}|Config].
+    try
+        ok = vocabio_conf:add_paths("../../"),
+        ok = vocabio_conf:merge_conf_file("../../boss.config"),
+        ok = application:start(crypto),
+        ok = application:start(boss),
+        ok = application:start(inets),
+        RootURL = "http://localhost:8001/",
+        %% Let httpc handle session cookies for us with the default node-wide
+        %% profile
+        ok = httpc:set_options([{cookies, enabled}]),
+        ok = wait_until_root_up(RootURL),
+        ok = vocabio_ct_meck:mock_openid(),
+        [{root_url, RootURL} | Config]
+    catch
+        Class:Exception ->
+            ct:log("~p:~p",[Class,Exception]),
+            ct:log("~p", [erlang:get_stacktrace()]),
+            application:stop(boss),
+            {skip, {Class, Exception}}
+    end.
 
 end_per_suite(_Config) ->
-    ibrowse:stop(),
-    os:cmd("../../init.sh stop"),
+    vocabio_ct_meck:unmock_openid(),
+    ok = application:stop(boss),
     void.
 
 
@@ -69,7 +81,12 @@ sign_up(Config) ->
     GETKeyEqVal = re:split(GETVarString, "[?&]"),
     true = lists:member(
              <<"openid.return_to=http://localhost:8001/user/openid/return">>,
-             GETKeyEqVal).
+             GETKeyEqVal),
+    {ok, {{_,302,"Moved Temporarily"},OIDReturnHeads,_}} =
+        httpc:request(
+          get, {RootURL ++ "/user/openid/return", []},
+          [{autoredirect, false}], []),
+    "/user/create" = proplists:get_value("location", OIDReturnHeads).
 
 
 %%==============================================================================
