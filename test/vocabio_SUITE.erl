@@ -71,17 +71,11 @@ sign_up(Config) ->
           get, {RootURL ++ "/user/signup", []},
           [{autoredirect, false}], []),
     RelOIDStartURL = proplists:get_value("location", SignupHeads),
-    {ok, {{_,302,"Moved Temporarily"},OIDStartHeads,_}} =
+    {ok, {{_,302,"Moved Temporarily"},_OIDStartHeads,_}} =
         httpc:request(
           get, {RootURL ++ RelOIDStartURL, []},
           [{autoredirect, false}], []),
-    OIDOutURL = proplists:get_value("location", OIDStartHeads),
-    {ok, {_,_,_,_,_,GETVarPart}} = http_uri:parse(OIDOutURL),
-    GETVarString = http_uri:decode(GETVarPart),
-    GETKeyEqVal = re:split(GETVarString, "[?&]"),
-    true = lists:member(
-             <<"openid.return_to=http://localhost:8001/user/openid/return">>,
-             GETKeyEqVal),
+    %% ... then skip the OpenID provider part and just GET return ...
     {ok, {{_,302,"Moved Temporarily"},OIDReturnHeads,_}} =
         httpc:request(
           get, {RootURL ++ "/user/openid/return", []},
