@@ -8,6 +8,9 @@
 %%%-------------------------------------------------------------------
 -module(vocabio_SUITE).
 
+-define(ROOT_URL, proplists:get_value(root_url, Config)).
+-define(POST_CONT_TYPE, "application/x-www-form-urlencoded").
+
 %% Common Test interface
 -export([all/0, init_per_suite/1, end_per_suite/1]).
 
@@ -17,8 +20,12 @@
          ,get_user_signup/1
          ,get_user_openid_start/1
          ,get_user_openid_return/1
+         ,get_user_create/1
          ,post_user_create/1
          ,get_user_do__signin/1
+         ,get_word_list_before_submit/1
+         ,post_word_list/1
+         ,get_word_list_after_submit/1
         ]).
 
 %%==============================================================================
@@ -32,8 +39,12 @@ all() ->
      ,get_user_openid_start
      %% ... then skip the OpenID provider part since openid is mocked ...
      ,get_user_openid_return
+     ,get_user_create
      ,post_user_create
      ,get_user_do__signin
+     ,get_word_list_before_submit
+     ,post_word_list
+     ,get_word_list_after_submit
     ].
 
 init_per_suite(Config) ->
@@ -69,50 +80,63 @@ end_per_suite(_Config) ->
 
 %% This sets up the session cookie and whatnot in the httpc profile.
 get_root(Config) ->
-    RootURL = proplists:get_value(root_url, Config),
-    {ok, {{_,200,"OK"},_,_}} = httpc:request(RootURL).
+    {ok, {{_,200,"OK"},_,_}} = httpc:request(?ROOT_URL).
 
 get_user_signup(Config) ->
-    RootURL = proplists:get_value(root_url, Config),
     {ok, {{_,302,"Moved Temporarily"},SignupHeads,_}} =
         httpc:request(
-          get, {RootURL ++ "/user/signup", []},
+          get, {?ROOT_URL ++ "/user/signup", []},
           [{autoredirect, false}], []),
     "/user/openid/start" = proplists:get_value("location", SignupHeads).
 
 get_user_openid_start(Config) ->
-    RootURL = proplists:get_value(root_url, Config),
     {ok, {{_,302,"Moved Temporarily"},_OIDStartHeads,_}} =
         httpc:request(
-          get, {RootURL ++ "/user/openid/start", []},
+          get, {?ROOT_URL ++ "/user/openid/start", []},
           [{autoredirect, false}], []).
 
 get_user_openid_return(Config) ->
-    RootURL = proplists:get_value(root_url, Config),
     {ok, {{_,302,"Moved Temporarily"},OIDReturnHeads,_}} =
         httpc:request(
-          get, {RootURL ++ "/user/openid/return", []},
+          get, {?ROOT_URL ++ "/user/openid/return", []},
           [{autoredirect, false}], []),
     "/user/create" = proplists:get_value("location", OIDReturnHeads).
 
+get_user_create(Config) ->
+    {ok, {{_, 200, "OK"}, _,_}} = httpc:request(?ROOT_URL++"/user/create").
+
 post_user_create(Config) ->
-    RootURL = proplists:get_value(root_url, Config),
-    {ok, {{_, 200, "OK"}, _,_}} = httpc:request(RootURL++"/user/create"),
-    ContentType = "application/x-www-form-urlencoded",
     CreatePOSTBody = "display_name=Fred&email=fred@bloggs.com",
     {ok, {{_, 302, "Moved Temporarily"},CreateRespHeads,_}} =
         httpc:request(
-          post, {RootURL ++ "/user/create", [], ContentType, CreatePOSTBody},
+          post, {?ROOT_URL ++ "/user/create", [], ?POST_CONT_TYPE, CreatePOSTBody},
           [{autoredirect, false}], []),
     "/user/do_signin" = proplists:get_value("location", CreateRespHeads).
 
 get_user_do__signin(Config) ->
-    RootURL = proplists:get_value(root_url, Config),
     {ok, {{_, 302, "Moved Temporarily"},DoSigninRespHeads,_}} =
         httpc:request(
-          get, {RootURL ++ "/user/do_signin", []},
+          get, {?ROOT_URL ++ "/user/do_signin", []},
           [{autoredirect, false}], []),
     "/" = proplists:get_value("location", DoSigninRespHeads).
+
+get_word_list_before_submit(Config) ->
+    {ok, {{_, 200, "OK"}, _,NewListBody}} =
+        httpc:request(?ROOT_URL++"/word/list"),
+    nomatch = re:run(NewListBody, "\bsomenewword\b", [{capture, none}]).
+
+post_word_list(Config) ->
+    ReqHeads = [{"Referer", ?ROOT_URL++"/word/list"}],
+    POSTBody = "new_word=somenewword",
+    {ok, {{_, 302, "Moved Temporarily"},WordPostRespHeads,_}} =
+        httpc:request(
+          post, {?ROOT_URL ++ "/word/list", ReqHeads, ?POST_CONT_TYPE, POSTBody},
+          [], []),
+    "/word/list" = proplists:get_value("location", WordPostRespHeads).
+
+get_word_list_after_submit(Config) ->
+    {ok, {{_, 200, "OK"},_,NewListBody}} = httpc:request(?ROOT_URL++"/word/list"),
+    match = re:run(NewListBody, "\\bsomenewword\\b", [{capture, none}]).
 
 
 %%==============================================================================
