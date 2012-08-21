@@ -14,7 +14,11 @@
 %% Common Test cases
 -export([
          get_root/1
-         ,sign_up/1
+         ,get_user_signup/1
+         ,get_user_openid_start/1
+         ,get_user_openid_return/1
+         ,post_user_create/1
+         ,get_user_do__signin/1
         ]).
 
 %%==============================================================================
@@ -24,12 +28,16 @@
 all() ->
     [
      get_root
-     ,sign_up
+     ,get_user_signup
+     ,get_user_openid_start
+     %% ... then skip the OpenID provider part since openid is mocked ...
+     ,get_user_openid_return
+     ,post_user_create
+     ,get_user_do__signin
     ].
 
 init_per_suite(Config) ->
     try
-        ok = vocabio_conf:add_paths("../../"),
         ok = vocabio_conf:merge_conf_file("../../boss.config"),
         ok = application:start(crypto),
         ok = application:start(boss),
@@ -64,23 +72,47 @@ get_root(Config) ->
     RootURL = proplists:get_value(root_url, Config),
     {ok, {{_,200,"OK"},_,_}} = httpc:request(RootURL).
 
-sign_up(Config) ->
+get_user_signup(Config) ->
     RootURL = proplists:get_value(root_url, Config),
     {ok, {{_,302,"Moved Temporarily"},SignupHeads,_}} =
         httpc:request(
           get, {RootURL ++ "/user/signup", []},
           [{autoredirect, false}], []),
-    RelOIDStartURL = proplists:get_value("location", SignupHeads),
+    "/user/openid/start" = proplists:get_value("location", SignupHeads).
+
+get_user_openid_start(Config) ->
+    RootURL = proplists:get_value(root_url, Config),
     {ok, {{_,302,"Moved Temporarily"},_OIDStartHeads,_}} =
         httpc:request(
-          get, {RootURL ++ RelOIDStartURL, []},
-          [{autoredirect, false}], []),
-    %% ... then skip the OpenID provider part and just GET return ...
+          get, {RootURL ++ "/user/openid/start", []},
+          [{autoredirect, false}], []).
+
+get_user_openid_return(Config) ->
+    RootURL = proplists:get_value(root_url, Config),
     {ok, {{_,302,"Moved Temporarily"},OIDReturnHeads,_}} =
         httpc:request(
           get, {RootURL ++ "/user/openid/return", []},
           [{autoredirect, false}], []),
     "/user/create" = proplists:get_value("location", OIDReturnHeads).
+
+post_user_create(Config) ->
+    RootURL = proplists:get_value(root_url, Config),
+    {ok, {{_, 200, "OK"}, _,_}} = httpc:request(RootURL++"/user/create"),
+    ContentType = "application/x-www-form-urlencoded",
+    CreatePOSTBody = "display_name=Fred&email=fred@bloggs.com",
+    {ok, {{_, 302, "Moved Temporarily"},CreateRespHeads,_}} =
+        httpc:request(
+          post, {RootURL ++ "/user/create", [], ContentType, CreatePOSTBody},
+          [{autoredirect, false}], []),
+    "/user/do_signin" = proplists:get_value("location", CreateRespHeads).
+
+get_user_do__signin(Config) ->
+    RootURL = proplists:get_value(root_url, Config),
+    {ok, {{_, 302, "Moved Temporarily"},DoSigninRespHeads,_}} =
+        httpc:request(
+          get, {RootURL ++ "/user/do_signin", []},
+          [{autoredirect, false}], []),
+    "/" = proplists:get_value("location", DoSigninRespHeads).
 
 
 %%==============================================================================
