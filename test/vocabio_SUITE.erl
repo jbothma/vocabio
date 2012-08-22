@@ -53,7 +53,7 @@ init_per_suite(Config) ->
         ok = application:start(crypto),
         ok = application:start(boss),
         ok = application:start(inets),
-        RootURL = "http://localhost:8001/",
+        {ok, RootURL} = application:get_env(vocabio, vocabio_url),
         %% Let httpc handle session cookies for us with the default node-wide
         %% profile
         ok = httpc:set_options([{cookies, enabled}]),

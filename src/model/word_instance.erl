@@ -28,7 +28,12 @@ validate_source({post, POST_URL, Referer}) ->
     case
         try
             {ok, _} = http_uri:parse(unicode:characters_to_list(Referer)),
-            "//localhost:8001/word/list" = unicode:characters_to_list(POST_URL),
+            {ok, BaseURL} = application:get_env(vocabio, vocabio_url),
+            {ok, {_, _, Host, Port, Path, _}} = http_uri:parse(BaseURL),
+            ExpectedPOSTURL = lists:flatten(
+                                ["//", Host, $:,integer_to_list(Port),
+                                 Path, "word/list"]),
+            ExpectedPOSTURL = unicode:characters_to_list(POST_URL),
             pass
         catch
             _ -> fail

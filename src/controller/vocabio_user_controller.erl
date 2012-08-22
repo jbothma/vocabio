@@ -47,7 +47,7 @@ do_signin('GET', []) ->
 openid('GET', ["start"]) ->
     Prepare = {prepare, SessionID, "https://www.google.com/accounts/o8/id", true},
     {ok, AuthReq} = gen_server:call(openid_srv, Prepare),
-    BaseUrl =  "http://localhost:8001/",
+    {ok, BaseUrl} =  application:get_env(vocabio, vocabio_url),
     ReturnUrl = BaseUrl ++ "user/openid/return",
     Url = openid:authentication_url(AuthReq, ReturnUrl, BaseUrl),
     {redirect, Url};
@@ -59,7 +59,7 @@ openid('POST', ["return"]) ->
     openid_return().
 
 openid_return() ->
-    BaseUrl =  "http://localhost:8001/",
+    {ok, BaseUrl} =  application:get_env(vocabio, vocabio_url),
     ReturnUrl = BaseUrl ++ "user/openid/return",
     AuthState = boss_session:get_session_data(SessionID, authstate),
     Verify = {verify, SessionID, ReturnUrl, Req:query_params()},
