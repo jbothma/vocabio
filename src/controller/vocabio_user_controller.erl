@@ -5,13 +5,21 @@
 %% controller web actions
 -export([create/2, do_signin/2, signin/2, signup/2, signout/2, openid/2]).
 
+
 signin('GET', []) ->
     ok = boss_session:set_session_data(SessionID, authstate, signin),
-    {redirect, "/user/openid/start"}.
+    {redirect, "/user/openid/choose"}.
+
 
 signup('GET', []) ->
-    ok = boss_session:set_session_data(SessionID, authstate, signup),
-    {redirect, "/user/openid/start"}.
+    case boss_session:get_session_data(SessionID, openid) of
+        undefined ->
+            ok = boss_session:set_session_data(SessionID, authstate, signup),
+            {redirect, "/user/openid/choose"};
+        _ ->
+            {redirect, "/user/create"}
+    end.
+
 
 signout('GET', []) ->
     ok = boss_session:delete_session(SessionID),
@@ -35,6 +43,7 @@ create('POST', []) ->
     ok = boss_session:set_session_data(SessionID, user_openid, SavedUserOpenID),
     {redirect, "/user/do_signin"}.
 
+
 do_signin('GET', []) ->
     ok = boss_session:remove_session_data(SessionID, authstate),
     UserOpenID = boss_session:get_session_data(SessionID, user_openid),
@@ -43,9 +52,16 @@ do_signin('GET', []) ->
     {redirect, "/"}.
 
 
+openid('GET', ["choose"]) ->
+    case boss_db:find(openid_provider, []) of
+        Providers when is_list(Providers) ->
+            {ok, [{providers, Providers}]}
+    end;
+
 %% GET handler for /openid/start
 openid('GET', ["start"]) ->
-    Prepare = {prepare, SessionID, "https://www.google.com/accounts/o8/id", true},
+    Endpoint = Req:query_param("endpoint"),
+    Prepare = {prepare, SessionID, Endpoint, true},
     {ok, AuthReq} = gen_server:call(openid_srv, Prepare),
     {ok, BaseUrl} =  application:get_env(vocabio, vocabio_url),
     ReturnUrl = BaseUrl ++ "user/openid/return",
@@ -74,6 +90,7 @@ openid_return() ->
             ok = boss_session:set_session_data(SessionID, openid, OpenIDBin),
             {redirect, "/user/create"};
         [] when AuthState == signin ->
+            ok = boss_session:set_session_data(SessionID, openid, OpenIDBin),
             FlashMsg = "Your Google ID isn't known to us. Please sign up now.",
             boss_flash:add(SessionID, notice, "Please sign up", FlashMsg),
             {redirect, "/user/signup"}

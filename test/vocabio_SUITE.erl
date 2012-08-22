@@ -18,6 +18,7 @@
 -export([
          get_root/1
          ,get_user_signup/1
+         ,get_user_openid_choose/1
          ,get_user_openid_start/1
          ,get_user_openid_return/1
          ,get_user_create/1
@@ -36,6 +37,7 @@ all() ->
     [
      get_root
      ,get_user_signup
+     ,get_user_openid_choose
      ,get_user_openid_start
      %% ... then skip the OpenID provider part since openid is mocked ...
      ,get_user_openid_return
@@ -87,12 +89,15 @@ get_user_signup(Config) ->
         httpc:request(
           get, {?ROOT_URL ++ "/user/signup", []},
           [{autoredirect, false}], []),
-    "/user/openid/start" = proplists:get_value("location", SignupHeads).
+    "/user/openid/choose" = proplists:get_value("location", SignupHeads).
+
+get_user_openid_choose(Config) ->
+    {ok, {{_,200,"OK"},_,_}} = httpc:request(?ROOT_URL++"/user/openid/choose").
 
 get_user_openid_start(Config) ->
     {ok, {{_,302,"Moved Temporarily"},_OIDStartHeads,_}} =
         httpc:request(
-          get, {?ROOT_URL ++ "/user/openid/start", []},
+          get, {?ROOT_URL ++ "/user/openid/start?endpoint=untested", []},
           [{autoredirect, false}], []).
 
 get_user_openid_return(Config) ->

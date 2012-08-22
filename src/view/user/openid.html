@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+  {% block title %}OpenID{% endblock %}
+  {% block body %}
+    <a href="http://www.openid.net/">
+      <img src="http://openid.net/images/logo/openid-icon-100x100.png"
+           alt="OpenID" />
+    </a>
+    <p>
+      This site uses OpenID to authenticate users. You can read about how OpenID
+      makes it easier to protect your identity and makes authentication easier
+      at <a href="http://www.openid.net/">their website.</a>
+    </p>
+    <p>Select the OpenID provider you'd like to use for signing in to this site.</p>
+    {% for provider in providers %}
+      <p>
+        <a href="/user/openid/start?endpoint={{ provider.endpoint|urlencode }}">
+          {{ provider.friendly_name }}
+        </a>
+      </p>
+    {% endfor %}
+    You can also provide your own OpenID provider URL:
+    <form name="openid_endpoint" action="/user/openid/start" method="get">
+      <label for="text_endpoint">OpenID Endpoint URL: </label>
+      <img src="http://wiki.openid.net/f/openid-16x16.gif" alt="OpenID Logo" />
+      <input name="endpoint" id="text_endpoint" type="text">
+      <input type="submit" />
+    </form>
+  {% endblock %}
