@@ -10,9 +10,9 @@
     {% if user %}
       <a href="/user/signout">Sign out</a>
     {% else %}
-      <a href="/user/signin">Sign in</a> with your Google account.
-      Not registered yet?
-      <a href="/user/signup">Sign up</a> with your Google account.
+      <a href="/user/signin">Sign in.</a>
+      Not signed up yet?
+      <a href="/user/signup">Sign up.</a>
     {% endif %}
     <h2>Hello{% if user %}, {{ user.display_name }}{% endif %}!</h2>
     <div id="flash">
