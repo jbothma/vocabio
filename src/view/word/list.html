@@ -3,24 +3,33 @@
   {% block title %}Word list{% endblock %}
   {% block body %}
     {% if user %}
-      <form method="post">
-        New word:
-        <input type="text" name="new_word" autofocus="autofocus"/>
+      <form name="word_list" method="post" action="/word/list">
+        <label for="text_new_word">New word:</label>
+        <input type="text" name="new_word" id="text_new_word"
+               autofocus="autofocus"/>
+        <label for="check_delete">Delete selected</label>
+        <input type="checkbox" name="delete" id="check_delete" />
         <input type="submit" />
+
+        <table>
+          <tr><td>Word</td></tr>
+        {% for word in user.words %}
+          <tr>
+            <td>
+              <input type="checkbox" name="ids[word][x{{ word.id|id_int }}]" />
+              {{ word.word }}
+            </td>
+            <td>
+              {% for instance in word.word_instances %}
+                <input type="checkbox"
+                       name="ids[word_instance][x{{ instance.id|id_int }}]" />
+                {{ instance.datetime|date: "r" }}<br/>
+              {% endfor %}
+            </td>
+          </tr>
+        {% endfor %}
+        </table>
       </form>
-      <table>
-        <tr><td>Word</td></tr>
-      {% for word in user.words %}
-        <tr>
-          <td>{{ word.word }}</td>
-          <td>
-            {% for instance in word.word_instances %}
-              {{ instance.datetime|date: "r" }}<br/>
-            {% endfor %}
-          </td>
-        </tr>
-      {% endfor %}
-      </table>
     {% else %}
       Not signed in.
     {% endif %}
