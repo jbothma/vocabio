@@ -62,7 +62,7 @@ openid('GET', ["choose"]) ->
 openid('GET', ["start"]) ->
     Endpoint = Req:query_param("endpoint"),
     Prepare = {prepare, SessionID, Endpoint, true},
-    {ok, AuthReq} = gen_server:call(openid_srv, Prepare),
+    {ok, AuthReq} = gen_server:call(openid_srv, Prepare, 10000),
     {ok, BaseUrl} =  application:get_env(vocabio, vocabio_url),
     ReturnUrl = BaseUrl ++ "user/openid/return",
     Url = openid:authentication_url(AuthReq, ReturnUrl, BaseUrl),
@@ -79,9 +79,9 @@ openid_return() ->
     ReturnUrl = BaseUrl ++ "user/openid/return",
     AuthState = boss_session:get_session_data(SessionID, authstate),
     Verify = {verify, SessionID, ReturnUrl, Req:query_params()},
-    {ok, OpenID} = gen_server:call(openid_srv, Verify),
+    {ok, OpenID} = gen_server:call(openid_srv, Verify, 10000),
     OpenIDBin = vocabio_unicode:utf8bytelist_to_nfc_utf8_binary(OpenID),
-    OpenIDSearch = boss_db:find(user_openid, [{open_id, equals, OpenIDBin}]),
+    OpenIDSearch = boss_db:find(user_openid, [{open_id_identifier, equals, OpenIDBin}]),
     case OpenIDSearch of
         [UserOpenID] when AuthState == signin ->
             ok = boss_session:set_session_data(SessionID, user_openid, UserOpenID),
